@@ -75,6 +75,7 @@ from perfkitbenchmarker import linux_benchmarks
 from perfkitbenchmarker import log_util
 from perfkitbenchmarker import os_types
 from perfkitbenchmarker import requirements
+from perfkitbenchmarker import spark_service
 from perfkitbenchmarker import stages
 from perfkitbenchmarker import static_virtual_machine
 from perfkitbenchmarker import timing_util
@@ -176,6 +177,9 @@ flags.DEFINE_bool(
 flags.DEFINE_boolean(
     'ignore_package_requirements', False,
     'Disables Python package requirement runtime checks.')
+flags.DEFINE_enum('spark_service_type', None,
+                  [spark_service.PKB_MANAGED, spark_service.PROVIDER_MANAGED],
+                  'Type of spark service to use')
 
 
 # Support for using a proxy in the cloud environment.
@@ -316,6 +320,7 @@ def DoProvisionPhase(name, spec, timer):
   """
   logging.info('Provisioning resources for benchmark %s', name)
   spec.ConstructVirtualMachines()
+  spec.ConstructSparkService()
   # Pickle the spec before we try to create anything so we can clean
   # everything up on a second run if something goes wrong.
   spec.PickleSpec()
@@ -624,18 +629,19 @@ def _GenerateBenchmarkDocumentation():
                            windows_benchmarks.BENCHMARKS):
     benchmark_config = configs.LoadMinimalConfig(
         benchmark_module.BENCHMARK_CONFIG, benchmark_module.BENCHMARK_NAME)
-    vm_groups = benchmark_config['vm_groups']
-    total_vm_count = 0
-    vm_str = ''
-    scratch_disk_str = ''
-    for group in vm_groups.itervalues():
-      group_vm_count = group.get('vm_count', 1)
-      if group_vm_count is None:
-        vm_str = 'variable'
-      else:
-        total_vm_count += group_vm_count
-      if group.get('disk_spec'):
-        scratch_disk_str = ' with scratch volume(s)'
+    if 'vm_groups' in benchmark_config:
+      vm_groups = benchmark_config['vm_groups']
+      total_vm_count = 0
+      vm_str = ''
+      scratch_disk_str = ''
+      for group in vm_groups.itervalues():
+        group_vm_count = group.get('vm_count', 1)
+        if group_vm_count is None:
+          vm_str = 'variable'
+        else:
+          total_vm_count += group_vm_count
+        if group.get('disk_spec'):
+          scratch_disk_str = ' with scratch volume(s)'
 
 
     name = benchmark_module.BENCHMARK_NAME

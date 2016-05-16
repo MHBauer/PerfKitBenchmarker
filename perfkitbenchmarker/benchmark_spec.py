@@ -31,6 +31,7 @@ from perfkitbenchmarker import flags
 from perfkitbenchmarker import os_types
 from perfkitbenchmarker import provider_info
 from perfkitbenchmarker import providers
+from perfkitbenchmarker import spark_service
 from perfkitbenchmarker import static_virtual_machine as static_vm
 from perfkitbenchmarker import virtual_machine
 from perfkitbenchmarker import vm_util
@@ -109,7 +110,7 @@ class BenchmarkSpec(object):
     """Redirects flag reads and writes to the benchmark-specific flags object.
 
     Within the enclosed code block, reads and writes to the flags.FLAGS object
-    are redirected to a copy that has been merged with config-provided flag
+    are redi:rected to a copy that has been merged with config-provided flag
     overrides specific to this benchmark run.
     """
     with self.config.RedirectFlags(FLAGS):
@@ -201,6 +202,10 @@ class BenchmarkSpec(object):
 
   def ConstructVirtualMachines(self):
     """Constructs the BenchmarkSpec's VirtualMachine objects."""
+    if self.config.vm_groups is None:
+      # As of now, the only way this is true is if we have a spark service
+      return
+
     vm_group_specs = self.config.vm_groups
 
     clouds = {}
@@ -228,6 +233,27 @@ class BenchmarkSpec(object):
       self.vm_groups[group_name] = vms
       self.vms.extend(vms)
 
+  def ConstructSparkService(self):
+    if self.config.spark_service:
+      providers.LoadProvider(self.config.spark_service.cloud)
+      spark_service_spec = self.config.spark_service
+      service_type = spark_service_spec.spark_service_type
+      if service_type == spark_service.PKB_MANAGED:
+        spark_service_class = spark_service.GetSparkService(
+            spark_service.PKB_MANAGED)
+      elif service_type == spark_service.PROVIDER_MANAGED:
+        spark_service_class = spark_service.GetSparkService(
+            spark_service_spec.cloud)
+      else:
+        valid_types = ' '.join(spark_service._SPARK_SERVICE_REGISTRY.keys())
+        raise Exception('Invalid spark service type %s must be one of %s',
+                        spark_service_spec.spark_service_type, valid_types)
+      if spark_service_class is None:
+        raise Exception('Invalid configuration registry is %s',
+                        str(spark_service._SPARK_SERVICE_REGISTRY))
+      name = FLAGS.spark_static_cluster_name or 'pkb-' + FLAGS.run_uri
+      self.spark_service = spark_service_class(name, spark_service_spec)
+
   def Prepare(self):
     targets = [(vm.PrepareBackgroundWorkload, (), {}) for vm in self.vms]
     vm_util.RunParallelThreads(targets, len(targets))
@@ -254,11 +280,16 @@ class BenchmarkSpec(object):
         sshable_vm_groups[group_name] = [vm for vm in group_vms
                                          if vm.OS_TYPE != os_types.WINDOWS]
       vm_util.GenerateSSHConfig(sshable_vms, sshable_vm_groups)
+    if self.spark_service:
+      self.spark_service.Create()
 
 
   def Delete(self):
     if self.deleted:
       return
+
+    if self.spark_service:
+      self.spark_service.Delete()
 
     if self.vms:
       try:
