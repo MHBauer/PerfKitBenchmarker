@@ -252,7 +252,12 @@ class BenchmarkSpec(object):
         raise Exception('Invalid configuration registry is %s',
                         str(spark_service._SPARK_SERVICE_REGISTRY))
       name = FLAGS.spark_static_cluster_name or 'pkb-' + FLAGS.run_uri
-      self.spark_service = spark_service_class(name, spark_service_spec)
+      if FLAGS.spark_static_cluster_name:
+        static_cluster = True
+      else:
+        static_cluster = False
+      self.spark_service = spark_service_class(name, static_cluster,
+                                               spark_service_spec)
 
   def Prepare(self):
     targets = [(vm.PrepareBackgroundWorkload, (), {}) for vm in self.vms]

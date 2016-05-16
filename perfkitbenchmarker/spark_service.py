@@ -117,16 +117,13 @@ class BaseSparkService(resource.BaseResource):
 
   __metaclass__ = AutoRegisterSparkServiceMeta
 
-  def __init__(self, name, spark_service_spec):
+  def __init__(self, name, static_cluster, spark_service_spec):
     super(BaseSparkService, self).__init__()
     self.name = name
     self.num_workers = spark_service_spec.num_workers
     self.machine_type = spark_service_spec.machine_type
     self.project = spark_service_spec.project
-    if name.startswith('pkb-'):
-      self.static_cluster = False
-    else:
-      self.static_cluster = True
+    self.static_cluster = static_cluster
 
   @abc.abstractmethod
   def SubmitJob(self, job_jar, class_name):
@@ -142,15 +139,6 @@ class PkbSparkService(BaseSparkService):
 
   CLOUD = PKB_MANAGED
   vms = []
-
-  def __init__(self, name, spark_service_spec):
-    """Initializes a StripedDisk object.
-
-    Args:
-      spark_service_spec: specification of the spark service
-    """
-    super(PkbSparkService, self).__init__(name, spark_service_spec)
-
 
   def _Create(self):
     """Create a spark cluster."""

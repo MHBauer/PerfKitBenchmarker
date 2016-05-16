@@ -39,9 +39,6 @@ class GcpDataproc(spark_service.BaseSparkService):
 
   CLOUD = providers.GCP
 
-  def __init__(self, name, spark_service_spec):
-    super(GcpDataproc, self).__init__(name, spark_service_spec)
-
   def _Create(self):
     """Creates the cluster."""
     # TODO(hildrum) this is not the right way to control this
