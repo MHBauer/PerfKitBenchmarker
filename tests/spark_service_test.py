@@ -47,6 +47,7 @@ name:
     num_workers: 5
 """
 
+
 class _BenchmarkSpecTestCase(unittest.TestCase):
 
   def setUp(self):

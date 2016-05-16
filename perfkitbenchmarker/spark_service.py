@@ -84,7 +84,7 @@ class BaseSparkServiceSpec(spec.BaseSpec):
       values or flag values.
     """
     raise Exception('woo hoo?')
-    super(BaseSparkSpec, cls)._ApplyFlags(config_values, flag_values)
+    super(BaseSparkServiceSpec, cls)._ApplyFlags(config_values, flag_values)
     if flag_values['machine_type'].present:
       config_values['machine_type'] = flag_values.machine_type
     if flag_values['num_workers'].present:
@@ -138,7 +138,11 @@ class PkbSparkService(BaseSparkService):
   """A spark service created from vms."""
 
   CLOUD = PKB_MANAGED
-  vms = []
+
+  def __init__(self, name, static_cluster, spark_service_spec):
+    super(PkbSparkService, self).__init__(name, static_cluster,
+                                          spark_service_spec)
+    self.vms = []
 
   def _Create(self):
     """Create a spark cluster."""
@@ -146,7 +150,7 @@ class PkbSparkService(BaseSparkService):
 
   def _Delete(self):
     """Delete the vms"""
-    for vm in vms:
+    for vm in self.vms:
       vm.delete()
 
   # TODO(hildrum) actually implement this.

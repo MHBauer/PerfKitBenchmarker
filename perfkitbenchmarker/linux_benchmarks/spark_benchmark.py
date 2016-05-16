@@ -71,13 +71,14 @@ def Run(benchmark_spec):
   logging.info('Jar result is ' + stdout)
   jar_end = datetime.datetime.now()
 
-  metadata = {'jarfile' : FLAGS.spark_jarfile,
-              'class' : FLAGS.spark_classname}
+  metadata = {'jarfile': FLAGS.spark_jarfile,
+              'class': FLAGS.spark_classname}
   results = []
   results.append(sample.Sample('jar_time',
                                (jar_end - jar_start).total_seconds(),
                                's', metadata))
   return results
+
 
 def Cleanup(benchmark_spec):
   pass
