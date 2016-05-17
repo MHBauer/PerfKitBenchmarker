@@ -110,7 +110,7 @@ class BenchmarkSpec(object):
     """Redirects flag reads and writes to the benchmark-specific flags object.
 
     Within the enclosed code block, reads and writes to the flags.FLAGS object
-    are redi:rected to a copy that has been merged with config-provided flag
+    are redirected to a copy that has been merged with config-provided flag
     overrides specific to this benchmark run.
     """
     with self.config.RedirectFlags(FLAGS):
