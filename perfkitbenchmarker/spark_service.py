@@ -29,8 +29,6 @@ import abc
 
 from perfkitbenchmarker import flags
 from perfkitbenchmarker import resource
-from perfkitbenchmarker.configs import option_decoders
-from perfkitbenchmarker.configs import spec
 
 FLAGS = flags.FLAGS
 
