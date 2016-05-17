@@ -165,7 +165,9 @@ class _StaticVmListDecoder(option_decoders.ListDecoder):
 
 
 class _SparkServiceSpec(spec.BaseSpec):
-  """Configurable options of a VM group.
+  """Configurable options of an Apache Spark Service.
+
+  We may add more options here, such as disk specs, as necessary.
 
   Attributes:
     spark_service_type: string.  pkb_managed or managed_service
@@ -354,7 +356,7 @@ class _VmGroupsDecoder(option_decoders.TypeVerifier):
 
 
 class _SparkServiceDecoder(option_decoders.TypeVerifier):
-  """Valids the spark_service dictionary of a benchmark config object."""
+  """Validates the spark_service dictionary of a benchmark config object."""
   def __init__(self, **kwargs):
     super(_SparkServiceDecoder, self).__init__(valid_types=(dict,), **kwargs)
 
@@ -362,7 +364,7 @@ class _SparkServiceDecoder(option_decoders.TypeVerifier):
     """Verifies spark_service dictionary of a benchmark config object.
 
     Args:
-      value: dict mapping spark
+      value: dict
       component_full_name: string.  Fully qualified name of the configurable
       component containing the config option.
       flag_values: flags.FlagValues.  Runtime flag values to be propagated to

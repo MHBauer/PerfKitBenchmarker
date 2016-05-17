@@ -12,9 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module containing spark service classes.
+"""Benchmarking support for Apache Spark services.
 
-A spark service provides create, delete, exists, and submit job.
+In order to benchmark Apache Spark services such as Google Cloud
+Platform's Dataproc or Amazon's EMR, we create a BaseSparkService
+class.  Classes to wrap each provider's Apache Spark Service are
+in the provider directory as a subclass of BaseSparkService.
+
+Also in this module is a PkbSparkService, which builds a Spark
+cluster by creating VMs and installing the necessary software.
+
+For more on Apache Spark: http://spark.apache.org/
 """
 
 import abc
@@ -26,7 +34,7 @@ from perfkitbenchmarker.configs import spec
 
 FLAGS = flags.FLAGS
 
-# Cloud to use for pkb-created spark service.
+# Cloud to use for pkb-created Spark service.
 PKB_MANAGED = 'pkb_managed'
 PROVIDER_MANAGED = 'managed'
 
@@ -39,7 +47,7 @@ def GetSparkService(cloud):
     return _SPARK_SERVICE_REGISTRY.get(cloud)
   else:
     registered_clouds = ' '.join(_SPARK_SERVICE_REGISTRY.keys())
-    raise Exception('No spark service found for {0} Options are {1}'.format(
+    raise Exception('No Spark service found for {0} Options are {1}'.format(
         cloud, registered_clouds))
 
 
@@ -55,61 +63,6 @@ class AutoRegisterSparkServiceMeta(abc.ABCMeta):
         _SPARK_SERVICE_REGISTRY[cls.CLOUD] = cls
     super(AutoRegisterSparkServiceMeta, cls).__init__(name, bases, dct)
 
-
-
-class BaseSparkServiceSpec(spec.BaseSpec):
-  """Stores the information needed to create a spark service.
-
-  Attributes:
-    machine_type: Type of the machine.
-    num_workers: Number of workers.
-  """
-
-  CLOUD = None
-
-  @classmethod
-  def _ApplyFlags(cls, config_values, flag_values):
-    """Overrides config values with flag values.
-
-    Can be overridden by derived classes to add support for specific flags.
-
-    Args:
-      config_values: dict mapping config option names to provided values. Is
-          modified by this function.
-      flag_values: flags.FlagValues. Runtime flags that may override the
-          provided config values.
-
-    Returns:
-      dict mapping config option names to values derived from the config
-      values or flag values.
-    """
-    raise Exception('woo hoo?')
-    super(BaseSparkServiceSpec, cls)._ApplyFlags(config_values, flag_values)
-    if flag_values['machine_type'].present:
-      config_values['machine_type'] = flag_values.machine_type
-    if flag_values['num_workers'].present:
-      config_values['num_workers'] = flag_values.num_workers
-
-  @classmethod
-  def _GetOptionDecoderConstructions(cls):
-    """Gets decoder classes and constructor args for each configurable option.
-
-    Can be overridden by derived classes to add options or impose additional
-    requirements on existing options.
-
-    Returns:
-      dict. Maps option name string to a (ConfigOptionDecoder class, dict) pair.
-          The pair specifies a decoder class and its __init__() keyword
-          arguments to construct in order to decode the named option.
-    """
-    raise Exception('woo hoo')
-    result = super(BaseSparkService, cls)._GetOptionDecoderConstructions()
-    result.update({
-        'machine_type': (option_decoders.StringDecoder, {'default': None,
-                                                         'none_ok': True}),
-        'num_workers': (option_decoders.IntDecoder, {'default': None,
-                                                     'none_ok': True})})
-    return result
 
 
 class BaseSparkService(resource.BaseResource):
@@ -135,7 +88,12 @@ class BaseSparkService(resource.BaseResource):
 
 
 class PkbSparkService(BaseSparkService):
-  """A spark service created from vms."""
+  """A Spark service created from vms.
+
+  This class will create a Spark service by creating VMs and installing
+  the necessary software.  (Similar to how the hbase benchmark currently
+  runs.  It should work across all or almost all providers.
+  """
 
   CLOUD = PKB_MANAGED
 
@@ -145,7 +103,7 @@ class PkbSparkService(BaseSparkService):
     self.vms = []
 
   def _Create(self):
-    """Create a spark cluster."""
+    """Create an Apache Spark cluster."""
     raise NotImplementedError()
 
   def _Delete(self):

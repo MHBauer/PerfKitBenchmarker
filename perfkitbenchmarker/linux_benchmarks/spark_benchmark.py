@@ -12,9 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Runs ping.
+"""Runs a jar using a cluster that supports Apache Spark.
 
-This benchmark runs ping using the internal ips of vms in the same zone.
+This benchmark takes a jarfile and class name, and runs that class
+using an Apache Spark cluster.  The Apache Spark cluster can be one
+supplied by a cloud provider, such as Google's Dataproc.
+
+It records how long the job takes to run.
+
+For more on Apache Spark, see: http://spark.apache.org/
 """
 
 import datetime
@@ -40,7 +46,7 @@ flags.DEFINE_string('spark_jarfile', None,
 flags.DEFINE_string('spark_classname', None,
                     'Classname to be used')
 flags.DEFINE_string('spark_static_cluster_name', None,
-                    'If set, the name of the spark cluster, assumed to be '
+                    'If set, the name of the Spark cluster, assumed to be '
                     'ready.')
 
 FLAGS = flags.FLAGS
