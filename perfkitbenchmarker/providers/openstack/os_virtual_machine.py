@@ -178,6 +178,7 @@ class OpenStackVirtualMachine(virtual_machine.BaseVirtualMachine):
         except NotFound:
             return False
 
+    @vm_util.Retry(poll_interval=1, log_errors=False)
     def WaitForBootCompletion(self):
         # Do one longer sleep, then check at shorter intervals.
         if self.boot_wait_time is None:
